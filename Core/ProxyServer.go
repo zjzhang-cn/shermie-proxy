@@ -2,6 +2,7 @@ package Core
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 	"net/http"
@@ -32,16 +33,17 @@ type TcpClosetEvent func(conn net.Conn)
 type TcpServerStreamEvent func(message []byte, resolve ResolveTcp, conn net.Conn) (int, error)
 type TcpClientStreamEvent func(message []byte, resolve ResolveTcp, conn net.Conn) (int, error)
 
-const (
-	MethodGet     = 0x47
-	MethodConnect = 0x43
-	MethodPost    = 0x50
-	MethodPut     = 0x50
-	MethodDelete  = 0x44
-	MethodOptions = 0x4F
-	MethodHead    = 0x48
-	SocksFive     = 0x5
-)
+var httpMethods = [][]byte{
+	[]byte("GET "),
+	[]byte("POST "),
+	[]byte("PUT "),
+	[]byte("DELETE "),
+	[]byte("OPTIONS "),
+	[]byte("HEAD "),
+	[]byte("CONNECT "),
+	[]byte("PATCH "),
+	[]byte("TRACE "),
+}
 
 type ProxyServer struct {
 	nagle                  bool
@@ -185,18 +187,26 @@ func (i *ProxyServer) handle(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 	// https、ws、wss读取到的数据为：CONNECT xx.com:8080 HTTP/1.1
-	peek, err := reader.Peek(3)
+	peek, err := reader.Peek(9)
 	if err != nil {
 		return
 	}
 	peer := ConnPeer{server: i, conn: conn, writer: writer, reader: reader}
-	switch peek[0] {
-	case MethodGet, MethodPost, MethodDelete, MethodOptions, MethodHead, MethodConnect:
+	if isHttpMethod(peek) {
 		process = &ProxyHttp{ConnPeer: peer}
-	case SocksFive:
+	} else if peek[0] == 0x5 {
 		process = &ProxySocks5{ConnPeer: peer}
-	default:
+	} else {
 		process = &ProxyTcp{ConnPeer: peer}
 	}
 	process.Handle()
+}
+
+func isHttpMethod(peek []byte) bool {
+	for _, method := range httpMethods {
+		if bytes.HasPrefix(peek, method) {
+			return true
+		}
+	}
+	return false
 }
