@@ -29,13 +29,13 @@ func (i *ProxyTcp) Handle() {
 		return
 	}
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	defer func() {
-		_ = conn.Close()
-	}()
 	if err != nil {
 		Log.Log.Println("连接tcp代理目标地址错误：" + err.Error())
 		return
 	}
+	defer func() {
+		_ = conn.Close()
+	}()
 	// 处理tls握手
 	host, port, _ := net.SplitHostPort(conn.RemoteAddr().String())
 	certificate, err := Cache.GetCertificate(host, port)
