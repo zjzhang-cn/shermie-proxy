@@ -445,15 +445,6 @@ func (i *ProxyHttp) DialContext() func(ctx context.Context, network, addr string
 			}
 		}
 		tcpAddr, _ := net.ResolveTCPAddr(network, ip+addr[separator:])
-		conn, err = net.DialTimeout(network, tcpAddr.String(), time.Duration(10)*time.Second)
-		if err != nil {
-			return conn, err
-		}
-		// 是否关闭nagle算法
-		tcpConn, ok := conn.(*net.TCPConn)
-		if ok {
-			_ = tcpConn.SetNoDelay(i.server.nagle)
-		}
 		dialer := net.Dialer{
 			Timeout:   time.Duration(30) * time.Second,
 			Deadline:  time.Time{},
@@ -463,7 +454,16 @@ func (i *ProxyHttp) DialContext() func(ctx context.Context, network, addr string
 		if i.server.network != "" {
 			dialer.LocalAddr = &net.TCPAddr{IP: net.ParseIP(i.server.network)}
 		}
-		return dialer.DialContext(ctx, network, tcpAddr.String())
+		conn, err = dialer.DialContext(ctx, network, tcpAddr.String())
+		if err != nil {
+			return conn, err
+		}
+		// 是否关闭nagle算法
+		tcpConn, ok := conn.(*net.TCPConn)
+		if ok {
+			_ = tcpConn.SetNoDelay(i.server.nagle)
+		}
+		return conn, nil
 	}
 }
 
