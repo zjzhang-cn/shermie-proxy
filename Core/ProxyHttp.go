@@ -220,7 +220,6 @@ func (i *ProxyHttp) handleSslRequest() {
 		_, err = i.conn.Write([]byte(ConnectFailed))
 		return
 	}
-	_ = i.target.Close()
 	// 向源连接返回连接成功
 	_, err = i.conn.Write([]byte(ConnectSuccess))
 	if err != nil {
