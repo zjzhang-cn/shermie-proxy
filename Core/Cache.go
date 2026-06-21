@@ -49,7 +49,7 @@ func (i *Storage) GetCertificate(hostname string, port string) (interface{}, err
 	if action, exist := i.mapping[host]; exist {
 		i.lock.Unlock()
 		action.wg.Wait()
-		return action.cert, nil
+		return action.cert, action.err
 	}
 	// 对不同的域名的并发,同一时刻只生成一个域名处理对象
 	i.mapping[host] = &action{
