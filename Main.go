@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/kxg3030/shermie-proxy/Core"
-	"github.com/kxg3030/shermie-proxy/Log"
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/kxg3030/shermie-proxy/Core"
+	"github.com/kxg3030/shermie-proxy/Log"
 )
 
 func init() {
