@@ -50,9 +50,9 @@ func TestRemoveHeader(t *testing.T) {
 
 	t.Run("only non-removable headers", func(t *testing.T) {
 		header := http.Header{
-			"Content-Type":   []string{"text/html"},
-			"X-Custom":       []string{"value"},
-			"Authorization":  []string{"Bearer token"},
+			"Content-Type":  []string{"text/html"},
+			"X-Custom":      []string{"value"},
+			"Authorization": []string{"Bearer token"},
 		}
 		proxy.RemoveHeader(header)
 		if header.Get("Content-Type") != "text/html" {

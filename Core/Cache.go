@@ -46,20 +46,21 @@ func (i *Storage) GetCertificate(hostname string, port string) (interface{}, err
 		return nil, err
 	}
 	// 对相同域名的并发,同一时刻只生成一个证书
-	if action, exist := i.mapping[host]; exist {
+	if act, exist := i.mapping[host]; exist {
 		i.lock.Unlock()
-		action.wg.Wait()
-		return action.cert, action.err
+		act.wg.Wait()
+		return act.cert, act.err
 	}
 	// 对不同的域名的并发,同一时刻只生成一个域名处理对象
-	i.mapping[host] = &action{
+	act := &action{
 		wg: &sync.WaitGroup{},
 		fn: GetAction(host),
 	}
-	i.mapping[host].wg.Add(1)
+	act.wg.Add(1)
+	i.mapping[host] = act
 	i.lock.Unlock()
-	i.do(i.mapping[host], i.mapping[host].fn)
-	return i.mapping[host].cert, i.mapping[host].err
+	i.do(act, act.fn)
+	return act.cert, act.err
 }
 
 func GetAction(hostname string) func() (interface{}, error) {
