@@ -1,5 +1,4 @@
 package Core
-package Core
 
 import "testing"
 
